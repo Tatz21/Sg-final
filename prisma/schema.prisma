@@ -1,0 +1,343 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  SALES
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  SITE_VISIT
+  NEGOTIATION
+  WON
+  LOST
+  SPAM
+}
+
+enum ContactMethod {
+  WHATSAPP
+  EMAIL
+  PHONE
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         Role       @default(EDITOR)
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  assignedLeads Lead[]     @relation("AssignedLeads")
+  leadNotes     LeadNote[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+model Country {
+  id           String   @id @default(cuid())
+  name         String
+  iso2         String   @unique
+  slug         String   @unique
+  currencyCode String   @default("USD")
+  phoneCode    String   @default("+1")
+  heroImage    String?
+  summary      String?
+  isPublished  Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cities      City[]
+  properties  Property[]
+  investments InvestmentOffering[]
+  developers  Developer[]
+
+  @@index([slug])
+}
+
+model City {
+  id        String   @id @default(cuid())
+  countryId String
+  name      String
+  slug      String
+  region    String?
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  country     Country              @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  properties  Property[]
+  investments InvestmentOffering[]
+
+  @@unique([countryId, slug])
+  @@index([countryId])
+}
+
+model Developer {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  website     String?
+  countryId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  country    Country?   @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  properties Property[]
+
+  @@index([slug])
+}
+
+model Property {
+  id             String        @id @default(cuid())
+  title          String
+  slug           String        @unique
+  projectName    String
+  summary        String
+  description    String
+  countryId      String
+  cityId         String?
+  developerId    String?
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  propertyType   String        @default("Apartment")
+  listingType    String        @default("Sale")
+  status         ContentStatus @default(DRAFT)
+  startingPrice  Decimal?
+  currencyCode   String        @default("USD")
+  bedroomsMin    Int?
+  bedroomsMax    Int?
+  bathrooms      Int?
+  areaMin        Decimal?
+  areaMax        Decimal?
+  areaUnit       String        @default("sqm")
+  featured       Boolean       @default(false)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  noIndex        Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  country   Country         @relation(fields: [countryId], references: [id])
+  city      City?           @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  developer Developer?      @relation(fields: [developerId], references: [id], onDelete: SetNull)
+  units     PropertyUnit[]
+  media     PropertyMedia[]
+  leads     Lead[]
+
+  @@index([countryId, status])
+  @@index([slug])
+  @@index([featured])
+}
+
+model PropertyUnit {
+  id                 String   @id @default(cuid())
+  propertyId         String
+  label              String
+  bedrooms           Int      @default(1)
+  bathrooms          Int      @default(1)
+  areaValue          Decimal
+  areaUnit           String   @default("sqm")
+  price              Decimal?
+  currencyCode       String   @default("USD")
+  availabilityStatus String   @default("Available")
+  description        String?
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model InvestmentOffering {
+  id                        String        @id @default(cuid())
+  title                     String
+  slug                      String        @unique
+  brand                     String?
+  projectName               String
+  countryId                 String
+  cityId                    String?
+  locationText              String
+  description               String
+  minimumAmount             Decimal
+  currencyCode              String        @default("INR")
+  assetType                 String        @default("Waterfront Unit")
+  unitType                  String        @default("1 BHK")
+  bedrooms                  Int           @default(1)
+  areaValue                 Decimal
+  areaUnit                  String        @default("sq ft")
+  statedReturnValue         String?
+  statedReturnPeriod        String?
+  statedReturnStartText     String?
+  capitalGainsTaxStatement  String?
+  projectedAppreciationText String?
+  handoverText              String?
+  riskDisclosure            String
+  legalStructure            String?
+  regulatoryStatus          String?
+  isVerified                Boolean       @default(false)
+  status                    ContentStatus @default(DRAFT)
+  featured                  Boolean       @default(false)
+  publishedAt               DateTime?
+  seoTitle                  String?
+  seoDescription            String?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+
+  country Country           @relation(fields: [countryId], references: [id])
+  city    City?             @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  media   InvestmentMedia[]
+  leads   Lead[]
+
+  @@index([countryId, status])
+  @@index([slug])
+  @@index([featured])
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  storageKey   String
+  url          String
+  mimeType     String   @default("image/jpeg")
+  sizeBytes    Int      @default(0)
+  width        Int?
+  height       Int?
+  altText      String
+  caption      String?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  propertyMedia   PropertyMedia[]
+  investmentMedia InvestmentMedia[]
+}
+
+model PropertyMedia {
+  id           String   @id @default(cuid())
+  propertyId   String
+  mediaAssetId String
+  sortOrder    Int      @default(0)
+  isCover      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  property   Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, mediaAssetId])
+  @@index([propertyId])
+}
+
+model InvestmentMedia {
+  id                   String   @id @default(cuid())
+  investmentOfferingId String
+  mediaAssetId         String
+  sortOrder            Int      @default(0)
+  isCover              Boolean  @default(false)
+  createdAt            DateTime @default(now())
+
+  investmentOffering InvestmentOffering @relation(fields: [investmentOfferingId], references: [id], onDelete: Cascade)
+  mediaAsset         MediaAsset         @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([investmentOfferingId, mediaAssetId])
+  @@index([investmentOfferingId])
+}
+
+model Lead {
+  id                     String        @id @default(cuid())
+  name                   String
+  email                  String
+  phone                  String
+  countryOfResidence     String?
+  message                String
+  preferredContactMethod ContactMethod @default(WHATSAPP)
+  consentAt              DateTime      @default(now())
+  consentVersion         String        @default("2026-01")
+  sourcePath             String?
+  campaignSource         String?
+  campaignMedium         String?
+  campaignName           String?
+  propertyId             String?
+  investmentOfferingId   String?
+  status                 LeadStatus    @default(NEW)
+  assignedToId           String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  property           Property?           @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  investmentOffering InvestmentOffering? @relation(fields: [investmentOfferingId], references: [id], onDelete: SetNull)
+  assignedTo         User?               @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+  notes              LeadNote[]
+
+  @@index([status])
+  @@index([propertyId])
+  @@index([investmentOfferingId])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model LeadNote {
+  id        String   @id @default(cuid())
+  leadId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  lead   Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  beforeData String?
+  afterData  String?
+  ipHash     String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
