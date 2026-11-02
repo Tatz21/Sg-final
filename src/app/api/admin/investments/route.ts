@@ -4,6 +4,8 @@ import { repository } from '@/lib/db';
 import { investmentInputSchema } from '@/lib/validation';
 import type { InvestmentOfferingItem } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getCurrentSession();
   if (!session) {
@@ -67,4 +69,3 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: { message: 'Failed to update investment offering' } }, { status: 500 });
   }
 }
-

@@ -4,6 +4,8 @@ import { repository } from '@/lib/db';
 import { propertyInputSchema } from '@/lib/validation';
 import type { PropertyItem } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getCurrentSession();
   if (!session) {
@@ -69,4 +71,3 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: { message: 'Failed to update property' } }, { status: 500 });
   }
 }
-

@@ -3,7 +3,8 @@ import { loginSchema } from '@/lib/validation';
 import { signSessionToken, AUTH_COOKIE_NAME } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 
-// Standard demo credentials for bootstrapping SG Properties CMS
+export const dynamic = 'force-dynamic';
+
 const ADMIN_CREDENTIALS = [
   {
     id: 'user-admin-1',
@@ -84,4 +85,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

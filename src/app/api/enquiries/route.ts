@@ -3,6 +3,8 @@ import { enquirySchema } from '@/lib/validation';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { repository } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -23,7 +25,6 @@ export async function POST(request: Request) {
 
     // Spam honeypot
     if (body.botCheck && body.botCheck.trim() !== '') {
-      // Quietly return success to fool bots without saving spam
       return NextResponse.json({
         success: true,
         message: 'Your enquiry has been received.',
@@ -93,4 +94,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

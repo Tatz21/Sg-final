@@ -3,6 +3,8 @@ import { getCurrentSession, hasPermission } from '@/lib/auth';
 import { repository } from '@/lib/db';
 import type { LeadStatus } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const session = await getCurrentSession();
   if (!session) {
@@ -45,7 +47,6 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Add note to lead
   const session = await getCurrentSession();
   if (!session || !hasPermission(session.role, 'SALES')) {
     return NextResponse.json({ error: { code: 'FORBIDDEN' } }, { status: 403 });
@@ -67,4 +68,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: { message: 'Failed to add note' } }, { status: 500 });
   }
 }
-

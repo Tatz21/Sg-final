@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { repository } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const featured = searchParams.get('featured');
@@ -15,4 +17,3 @@ export async function GET(request: Request) {
     total: investments.length,
   });
 }
-

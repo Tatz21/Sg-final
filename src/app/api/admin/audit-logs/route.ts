@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentSession, hasPermission } from '@/lib/auth';
 import { repository } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getCurrentSession();
   if (!session || !hasPermission(session.role, 'ADMIN')) {
@@ -11,4 +13,3 @@ export async function GET() {
   const logs = repository.getAuditLogs();
   return NextResponse.json({ data: logs });
 }
-

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { repository } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const country = searchParams.get('country');
@@ -17,4 +19,3 @@ export async function GET(request: Request) {
     total: properties.length,
   });
 }
-

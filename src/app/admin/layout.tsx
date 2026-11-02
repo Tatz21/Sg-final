@@ -1,8 +1,9 @@
 import React from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { getCurrentSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Admin CMS Workspace | SG Properties',
@@ -18,10 +19,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await getCurrentSession();
-  const headerList = headers();
-  const pathname = headerList.get('x-pathname') || '';
 
-  // Allow login page access without redirect
   return (
     <div className="min-h-screen flex bg-stone-100">
       <AdminSidebar
@@ -34,4 +32,3 @@ export default async function AdminLayout({
     </div>
   );
 }
-

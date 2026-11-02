@@ -13,18 +13,27 @@ import type {
   LeadStatus,
 } from '@/types';
 
-// Global singleton PrismaClient
+// Safe Prisma Client initialization for serverless / Vercel builds where DATABASE_URL may be pending
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-  });
+function createPrismaClient(): PrismaClient | undefined {
+  if (!process.env.DATABASE_URL) {
+    return undefined;
+  }
+  try {
+    return new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    });
+  } catch (e) {
+    console.warn('Prisma initialization bypassed:', e);
+    return undefined;
+  }
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export const prisma = globalForPrisma.prisma ?? (createPrismaClient() as PrismaClient);
+if (process.env.NODE_ENV !== 'production' && prisma) globalForPrisma.prisma = prisma;
 
 // In-memory runtime store ensuring seamless DX even without active Postgres instance
 class DataStore {
